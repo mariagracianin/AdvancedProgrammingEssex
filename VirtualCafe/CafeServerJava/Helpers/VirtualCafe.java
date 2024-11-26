@@ -3,7 +3,7 @@ package Helpers;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-public class VirtualCafe implements Runnable{
+public class VirtualCafe{
     private Map<String, Customer> customers = new TreeMap<>();
 
     private Queue<Tea> waitingTeas = new ConcurrentLinkedQueue<>();
@@ -15,23 +15,11 @@ public class VirtualCafe implements Runnable{
     private List<Tea> readyTeas = new ArrayList<>();
     private List<Coffee> readyCoffees = new ArrayList<>();
 
-
-    @Override
-    public void run() {
-        new Thread(new TeaMaker("TeaMaker-1", waitingTeas, brewingTeas, readyTeas)).start();
-        new Thread(new TeaMaker("TeaMaker-2", waitingTeas, brewingTeas, readyTeas)).start();
-        new Thread(new CoffeeMaker("CoffeeMaker-1", waitingCoffees, brewingCoffees, readyCoffees)).start();
-        new Thread(new CoffeeMaker("CoffeeMaker-2", waitingCoffees, brewingCoffees, readyCoffees)).start();
-
-        while (true) {
-            try {
-
-                showLog(); //TODO cambiarlo de lugar a donde corresponda
-                Thread.sleep(2000 );
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+    public VirtualCafe() {
+        new Thread(new TeaMaker("TeaMaker-1",this, waitingTeas, brewingTeas, readyTeas)).start();
+        new Thread(new TeaMaker("TeaMaker-2",this, waitingTeas, brewingTeas, readyTeas)).start();
+        new Thread(new CoffeeMaker("CoffeeMaker-1",this, waitingCoffees, brewingCoffees, readyCoffees)).start();
+        new Thread(new CoffeeMaker("CoffeeMaker-2",this, waitingCoffees, brewingCoffees, readyCoffees)).start();
     }
 
     public Map<String, Customer> getCustomers() {
@@ -54,11 +42,18 @@ public class VirtualCafe implements Runnable{
         return readyCoffees;
     }
 
+    public boolean customerAlreadyExists(String customerName){
+        if(customers.get(customerName) != null){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
     public String getOrderStatus(String customerName) {
         return customers.get(customerName).getOrderStatusString();
     }
 
-    // TODO tengo q sincronizarlo? que solo un cliente pueda agregar ordenes? o sincronizarlo como los otros?
     public synchronized void addOrder(String customerName, int numTeas, int numCoffes){
         Customer customer = customers.get(customerName);
         if (customer == null){
@@ -75,6 +70,7 @@ public class VirtualCafe implements Runnable{
             customer.addCoffee(newCoffee);
             waitingCoffees.add(newCoffee);
         }
+        showLog();
     }
 
     public String collect(String customerName){
@@ -96,6 +92,7 @@ public class VirtualCafe implements Runnable{
                 }
                 coffeeList.remove(coffee);
             }
+            showLog();
             return "Order has been collected";
         }else {
             return "Order is still pending";
@@ -145,6 +142,7 @@ public class VirtualCafe implements Runnable{
             }
         }
 
+        waitingCoffees.removeIf(coffee -> coffee.getCustomerName().equals(customerName));
         synchronized (readyCoffees) {
             for (int index = 0; index < readyCoffees.size(); index++) {
                 Coffee coffeeReady = readyCoffees.get(index);
@@ -188,11 +186,22 @@ public class VirtualCafe implements Runnable{
         synchronized (customers){
             customers.remove(customerName);
         }
+        showLog();
         return "Goodbye, " + customerName + "! Disconnecting...";
     }
 
-    public void showLog(){
+    public String notifyOrderReady(String customerName){
+        Customer customer = customers.get(customerName);
+        if (customer.orderReady()){
+            return "Order completed for " + customerName + " (" + customer.getTeasList().size() + " teas and " + customer.getCoffeeList().size() + " coffees). Please collect!";
+        }else {
+            return null;
+        }
+    }
+
+    public synchronized void showLog(){
         System.out.println("---> SERVER CURRENT STATE");
+        System.out.println("Threads activos log: " + Thread.activeCount()); //TODO borra esta linea
         System.out.println("Number of clients in the café: " + this.customers.size());
         int count = 0;
         for (var entry : customers.entrySet()) {

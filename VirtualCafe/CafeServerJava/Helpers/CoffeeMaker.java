@@ -5,12 +5,14 @@ import java.util.Queue;
 
 public class CoffeeMaker implements Runnable{
     private String threadName;
+    private VirtualCafe virtualCafe;
     private Queue<Coffee> waitingCoffees;
     private List<Coffee> brewingCoffees;
     private List<Coffee> readyCoffees;
 
-    public CoffeeMaker(String name, Queue<Coffee> waitingCoffees, List<Coffee> brewingCoffees, List<Coffee> readyCoffees) {
+    public CoffeeMaker(String name, VirtualCafe virtualCafe, Queue<Coffee> waitingCoffees, List<Coffee> brewingCoffees, List<Coffee> readyCoffees) {
         this.threadName = name;
+        this.virtualCafe = virtualCafe;
         this.waitingCoffees = waitingCoffees;
         this.brewingCoffees = brewingCoffees;
         this.readyCoffees = readyCoffees;
@@ -23,12 +25,13 @@ public class CoffeeMaker implements Runnable{
             if (coffee != null) {
                 try {
                     synchronized (brewingCoffees){
+                        coffee.setState("brewing");
                         brewingCoffees.add(coffee);
                     }
-                    coffee.setState("brewing");
-                    //System.out.println(threadName + " está preparando cafe para " + coffee.getCustomerName());
 
-                    Thread.sleep(3000); // Simula 2 segundos para preparar un té
+                    virtualCafe.showLog();
+
+                    Thread.sleep(3000); //TODO cambiar a 45s
 
                     synchronized (brewingCoffees){
                         synchronized (readyCoffees) {
@@ -38,7 +41,7 @@ public class CoffeeMaker implements Runnable{
                             }
                         }
                     }
-                    //System.out.println(threadName + " ha terminado el cafe para " + coffee.getCustomerName());
+                    virtualCafe.showLog();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     break;

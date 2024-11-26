@@ -6,7 +6,7 @@ public class Coffee {
 
     public Coffee(String customerName) {
         this.customerName = customerName;
-        this.state = "waiting";
+        this.state = "waiting"; //"brewing" "tray"
     }
 
     public String getCustomerName() {

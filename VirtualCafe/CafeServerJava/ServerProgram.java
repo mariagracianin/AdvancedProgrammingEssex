@@ -8,7 +8,7 @@ public class ServerProgram
     private static final VirtualCafe virtualCafe = new VirtualCafe();
 
     public static void main(String[] args) {
-        new Thread(virtualCafe).start();
+        //new Thread(virtualCafe).start();
         RunServer();
     }
 

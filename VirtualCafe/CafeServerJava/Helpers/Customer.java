@@ -51,6 +51,9 @@ public class Customer {
     }
 
     public boolean orderReady(){
+        if (this.idleCustomer()){
+            return false;
+        }
         for (Tea tea : teasList) {
             if (tea.getState().equals("waiting") || tea.getState().equals("brewing")){
                 return false;
@@ -73,7 +76,7 @@ public class Customer {
         int coffeeInTrayArea = 0;
 
         if (teasList.isEmpty() && coffeeList.isEmpty()){
-            return "No order found for " + this.customerName + "\nEND";
+            return "No order found for " + this.customerName;
         }
 
         for (Tea tea : teasList) {
@@ -112,7 +115,11 @@ public class Customer {
             status.append(coffeeInWaitingArea).append(" coffee").append(coffeeInWaitingArea == 1 ? "" : "s");
             status.append(" and ");
             status.append(teasInWaitingArea).append(" tea").append(teasInWaitingArea == 1 ? "" : "s");
-            status.append(" in waiting area\n");
+            status.append(" in waiting area");
+        }
+
+        if (coffeeInWaitingArea > 0 || teasInWaitingArea > 0){
+            status.append("\n");
         }
 
         if (coffeeInBrewingArea > 0 || teasInBrewingArea > 0) {
@@ -120,7 +127,11 @@ public class Customer {
             status.append(coffeeInBrewingArea).append(" coffee").append(coffeeInBrewingArea == 1 ? "" : "s");
             status.append(" and ");
             status.append(teasInBrewingArea).append(" tea").append(teasInBrewingArea == 1 ? "" : "s");
-            status.append(" currently being prepared\n");
+            status.append(" currently being prepared");
+        }
+
+        if (coffeeInWaitingArea > 0 || teasInWaitingArea > 0 || (coffeeInBrewingArea > 0 || teasInBrewingArea > 0)){
+            status.append("\n");
         }
 
         if (coffeeInTrayArea > 0 || teasInTrayArea > 0) {
@@ -128,10 +139,9 @@ public class Customer {
             status.append(coffeeInTrayArea).append(" coffee").append(coffeeInTrayArea == 1 ? "" : "s");
             status.append(" and ");
             status.append(teasInTrayArea).append(" tea").append(teasInTrayArea == 1 ? "" : "s");
-            status.append(" currently in the tray\n");
+            status.append(" currently in the tray");
         }
 
-        status.append("END");
         return status.toString();
     }
 }
